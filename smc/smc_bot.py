@@ -20,7 +20,10 @@ import importlib
 L5 = importlib.import_module(os.environ.get('SMC_LIVE_MODULE', 'smc_live_v05'))   # staged test: SMC_LIVE_MODULE=smc_live_next
 
 TERMINAL = r"C:\Program Files\MetaTrader 5\terminal64.exe"
-DEMO_LOGIN = 5059023305
+# The account the bot may trade. The terminal is shared with other bots, so the bot never logs in
+# itself: it attaches to whatever account the terminal holds and refuses anything else.
+DEMO_LOGIN = int(os.environ.get('SMC_DEMO_LOGIN', '5059023305'))
+DEMO_SERVER = os.environ.get('SMC_DEMO_SERVER', '')
 NY, GH, UTC = ZoneInfo('America/New_York'), ZoneInfo('Africa/Accra'), timezone.utc
 RISK_PCT = 0.005
 HIST_M1 = 30000          # ~3 weeks of M1 for warm-up (H1 pivots, PDH/PDL, ATR)
@@ -34,6 +37,19 @@ FIELDS = ['symbol', 'side', 'sweep_level', 'choch_level', 'fvg_low', 'fvg_high',
 
 
 DISCONNECT_ALERT_S = 15 * 60
+
+
+def account_problem(ai, login, server, demo_mode):
+    """Why this account must not be traded, or None if it is the expected demo account."""
+    if ai is None:
+        return 'no account info from the terminal'
+    if ai.trade_mode != demo_mode:
+        return f'account {ai.login} is not a DEMO account'
+    if ai.login != login:
+        return f'terminal holds account {ai.login}, expected {login}'
+    if server and ai.server != server:
+        return f'account is on server {ai.server}, expected {server}'
+    return None
 
 
 class Bot:
@@ -67,10 +83,10 @@ class Bot:
     def connect(self):
         if not mt5.initialize(path=TERMINAL, timeout=120000):
             raise RuntimeError(f'mt5.initialize failed {mt5.last_error()}')
-        ai = mt5.account_info()
-        if ai is None or ai.login != DEMO_LOGIN or ai.trade_mode != mt5.ACCOUNT_TRADE_MODE_DEMO:
+        problem = account_problem(mt5.account_info(), DEMO_LOGIN, DEMO_SERVER, mt5.ACCOUNT_TRADE_MODE_DEMO)
+        if problem:
             mt5.shutdown()
-            raise SystemExit('REFUSING: not the expected DEMO account')  # never trade a real account
+            raise SystemExit(f'REFUSING: {problem}')  # never trade a real account
         mt5.symbol_select('XAUUSD', True)
         for inst in list(L5.CONFIGS):
             sym = L5.CONFIGS[inst]['symbol']

@@ -1,0 +1,19 @@
+# /etc/systemd/system/smc-bot.service
+# Runs on the IC Markets terminal it shares with crypto-ic-bot (one terminal instead of two).
+[Unit]
+Description=SMC DEMO forward-test bot (XAUUSD/EURUSD/GBPUSD) on the IC Markets terminal
+After=xvfb101.service mt5-ic-terminal.service
+Wants=mt5-ic-terminal.service
+
+[Service]
+Environment=DISPLAY=:101 WINEPREFIX=/root/.mt5-icmarkets WINEDEBUG=-all WINEDLLOVERRIDES=mscoree,mshtml= PYTHONUNBUFFERED=1
+Environment=SMC_DEMO_LOGIN=53158615 SMC_DEMO_SERVER=ICMarketsSC-Demo
+WorkingDirectory=/opt/mt5/bot
+ExecStartPre=/bin/sleep 20
+ExecStart=/usr/bin/wine /root/.mt5-icmarkets/drive_c/Python310/python.exe -u smc_bot.py
+KillMode=process
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
