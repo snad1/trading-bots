@@ -1,0 +1,19 @@
+[Unit]
+Description=BTCUSD v0.6 M15 24/7 DEMO bot (IC Markets, magic 993515)
+Documentation=file:/opt/crypto-ic/README.md
+After=xvfb101.service mt5-ic-terminal.service network-online.target
+Wants=mt5-ic-terminal.service network-online.target
+
+[Service]
+Environment=DISPLAY=:101 WINEPREFIX=/root/.mt5-icmarkets WINEDEBUG=-all WINEDLLOVERRIDES=mscoree,mshtml= PYTHONUNBUFFERED=1
+WorkingDirectory=/opt/crypto-ic
+ExecStartPre=/bin/sleep 20
+ExecStart=/usr/bin/wine /root/.mt5-icmarkets/drive_c/Python310/python.exe -u /opt/crypto-ic/bot.py
+KillMode=process
+Restart=always
+RestartSec=30
+StandardOutput=append:/opt/crypto-ic/service.log
+StandardError=append:/opt/crypto-ic/service.log
+
+[Install]
+WantedBy=multi-user.target

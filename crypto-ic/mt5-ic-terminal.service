@@ -1,0 +1,18 @@
+[Unit]
+Description=MetaTrader 5 terminal for IC Markets DEMO (Wine prefix /root/.mt5-icmarkets, DISPLAY :101)
+Documentation=file:/opt/crypto-ic/README.md
+After=xvfb101.service network-online.target
+Wants=network-online.target
+Requires=xvfb101.service
+
+[Service]
+Environment=DISPLAY=:101 WINEPREFIX=/root/.mt5-icmarkets WINEDEBUG=-all WINEDLLOVERRIDES=mscoree,mshtml=
+ExecStart=/root/.icmarkets/run_terminal.sh
+ExecStop=/usr/bin/wine taskkill /im terminal64.exe
+TimeoutStopSec=40
+Restart=always
+RestartSec=20
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

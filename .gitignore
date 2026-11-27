@@ -1,0 +1,9 @@
+__pycache__/
+*.bak*
+*.log
+*.jsonl
+*state*.json
+*.csv
+replay_*
+funnel_live.json
+*creds*
